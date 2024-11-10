@@ -24,3 +24,6 @@ Homestead.json
 # IDEs
 .vscode
 .idea
+
+# Build Folder
+build
