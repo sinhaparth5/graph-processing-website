@@ -9,6 +9,7 @@ class Graph extends Model
 {
     protected $keyType = 'string';
     public $incrementing = false;
+    protected $fillable = ['nodes', 'edges'];
 
     protected static function boot() {
         parent::boot();

@@ -18,12 +18,20 @@ class GraphController extends Controller
     public function upload(Request $request) {
         $request->validate(['file' => 'required|file|mimes:json,csv']);
         $path = $request->file('file')->store('uploads');
-        $data = file_get_contents(storage_path('app/' . $path));
+        $data = file_get_contents(storage_path('app/private/' . $path));
 
+        // Decode the JSON data from the file
         $graphData = json_decode($data, true);
+
+        // If JSON decoding fails, return an error response
+        if ($graphData === null) {
+            return response()->json(['error' => 'Invalid JSON file'], 400);
+        }
+
+        // Create a new graph entry in the database with the nodes and edges
         $graph = Graph::create([
-            'nodes' => json_decode($graphData['nodes']),
-            'edges' => json_decode($graphData['edges']),
+            'nodes' => json_encode($graphData['nodes']),  // Store nodes as JSON
+            'edges' => json_encode($graphData['edges']),  // Store edges as JSON
         ]);
 
         return redirect()->route('graphs.show', $graph->id);

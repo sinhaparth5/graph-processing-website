@@ -17,10 +17,18 @@ const GraphUploadForm = () => {
             const formData = new FormData();
             formData.append('file', file);
 
-            const response = await fetch('/graph/upload', {
+            // CSRF Token
+            // @ts-ignore
+            const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
+            const response = await fetch('/graphs/upload', {
                 method: 'POST',
                 body: formData,
-                headers: { 'Accept': 'application/json' },
+                headers: {
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken || '',
+                },
+                credentials: 'include',
             });
 
             if (!response.ok) throw new Error('Upload failed');

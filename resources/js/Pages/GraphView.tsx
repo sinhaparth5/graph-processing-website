@@ -18,9 +18,8 @@ interface GraphData {
 
 interface GraphProps {
     graph: {
-        id: number;
-        nodes: string;
-        edges: string;
+        nodes: NodeDatum[];
+        edges: EdgeDatum[];
     };
 }
 
@@ -30,8 +29,8 @@ const GraphView: React.FC<GraphProps> = ({ graph }) => {
     useEffect(() => {
         if (!graph) return;
 
-        const nodes: NodeDatum[] = JSON.parse(graph.nodes).map((id: string) => ({ id }));
-        const edges: EdgeDatum[] = JSON.parse(graph.edges);
+        const nodes: NodeDatum[] = graph.nodes; // No need to parse, assuming it's already an array of objects
+        const edges: EdgeDatum[] = graph.edges; // Same for edges
         const data: GraphData = { nodes, edges };
 
         const width = 800;
@@ -46,22 +45,6 @@ const GraphView: React.FC<GraphProps> = ({ graph }) => {
             .force('link', d3.forceLink<NodeDatum, EdgeDatum>(data.edges).id(d => d.id).distance(100))
             .force('charge', d3.forceManyBody().strength(-300))
             .force('center', d3.forceCenter(width / 2, height / 2));
-
-        const dragBehavior = d3.drag<SVGCircleElement, NodeDatum>()
-            .on("start", (event: d3.D3DragEvent<SVGCircleElement, NodeDatum, NodeDatum>, d: NodeDatum) => {
-                if (!event.active) simulation.alphaTarget(0.3).restart();
-                d.fx = d.x;
-                d.fy = d.y;
-            })
-            .on("drag", (event: d3.D3DragEvent<SVGCircleElement, NodeDatum, NodeDatum>, d: NodeDatum) => {
-                d.fx = event.x;
-                d.fy = event.y;
-            })
-            .on("end", (event: d3.D3DragEvent<SVGCircleElement, NodeDatum, NodeDatum>, d: NodeDatum) => {
-                if (!event.active) simulation.alphaTarget(0);
-                d.fx = null;
-                d.fy = null;
-            });
 
         const link = svg.append('g')
             .attr('stroke', '#999')
@@ -78,8 +61,7 @@ const GraphView: React.FC<GraphProps> = ({ graph }) => {
             .data(data.nodes)
             .join('circle')
             .attr('r', 10)
-            .attr('fill', '#69b3a2')
-            .call(dragBehavior); // Apply drag behavior here without passing simulation directly
+            .attr('fill', '#69b3a2');
 
         const labels = svg.append('g')
             .selectAll<SVGTextElement, NodeDatum>('text')
@@ -91,10 +73,10 @@ const GraphView: React.FC<GraphProps> = ({ graph }) => {
 
         simulation.on('tick', () => {
             link
-                .attr('x1', d => (d as any).source.x)
-                .attr('y1', d => (d as any).source.y)
-                .attr('x2', d => (d as any).target.x)
-                .attr('y2', d => (d as any).target.y);
+                .attr('x1', d => (d.source as any).x)
+                .attr('y1', d => (d.source as any).y)
+                .attr('x2', d => (d.target as any).x)
+                .attr('y2', d => (d.target as any).y);
 
             node
                 .attr('cx', d => d.x!)
